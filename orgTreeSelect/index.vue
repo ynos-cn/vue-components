@@ -19,8 +19,9 @@
         <div v-else-if="treeData.length <= 0" class="z-select-dropdown-empty">
           <Empty />
         </div>
-        <Tree v-else-if="!loading && treeData.length > 0" :tree-data="treeData" @select="onSelect" @expand="onExpand"
-          :selectedKeys="selectedKeys" :expanded-keys="expandedKeys" :auto-expand-parent="autoExpandParent">
+        <Tree v-else-if="!loading && treeData.length > 0" :tree-data="treeData" @select="!checkable && onSelect"
+          @expand="onExpand" :selectedKeys="selectedKeys" :checkedKeys="eCheckedKeys" @check="onCheck"
+          :checkable="checkable" :expanded-keys="expandedKeys" :auto-expand-parent="autoExpandParent">
           <template #title="{ title }">
             <div :title="title" v-if="searchValue"
               v-html="title.replace(new RegExp(searchValue, 'g'), '<span style=color:#f50>' + searchValue + '</span>')">
@@ -43,7 +44,7 @@ import { onClickOutside } from "@vueuse/core";
 import { BaseParams } from '@/interface/base';
 import { OrgStruct } from '@/interface/org';
 import { useAppStore } from '@/store/app'
-import { apiFind, apiFindWithID } from '@/api/system/org-service'
+import { apiAllFind, apiFind, apiFindWithID } from '@/api/system/org-service'
 import { arrayToTree } from '@/utils/utils';
 
 const props = defineProps({
@@ -63,8 +64,21 @@ const props = defineProps({
     type: Boolean,
     default: true
   },
+  /** 所有机构 */
+  all: {
+    type: Boolean,
+    default: false,
+  },
+  checkable: {
+    type: Boolean,
+    default: false,
+  },
+  checkedKeys: {
+    type: Array,
+    default: () => []
+  },
 })
-const emit = defineEmits(['update:value', 'select'])
+const emit = defineEmits(['update:value', 'select', 'check'])
 
 const appStore = useAppStore()
 const listData = ref<Array<OrgStruct>>([])
@@ -85,6 +99,8 @@ const aVelue = ref()
 const formData = ref<any>({})
 /** 指定选择树 */
 const selectedKeys = ref<Array<any>>([])
+/** 指定选择树 */
+const eCheckedKeys = ref<Array<any>>([])
 /** 指定展开树 */
 const expandedKeys = ref([])
 const isSearch = ref(false)
@@ -94,6 +110,12 @@ const onExpand = (keys: any) => {
   expandedKeys.value = keys;
   autoExpandParent.value = false;
 };
+
+watch(() => props.checkedKeys, (val) => {
+  if (val) {
+    eCheckedKeys.value = val
+  }
+}, { immediate: true, deep: true })
 
 watch(() => props.value, (val) => {
   if (val) {
@@ -149,7 +171,7 @@ async function doQuery() {
   loading.value = true
 
   let currentOrg: OrgStruct
-  if (appStore.userInfo?.orgId) {
+  if (appStore.userInfo?.orgId && !props.all) {
     await apiFindWithID(appStore.userInfo?.orgId).then(res => {
       if (res.success) {
         currentOrg = {
@@ -173,7 +195,7 @@ async function doQuery() {
     })
   }
 
-  apiFind(body).then(res => {
+  (props.all ? apiAllFind() : apiFind(body)).then(res => {
     if (res.success) {
       const datas: Array<OrgStruct> = []
       res.data.map(v => {
@@ -183,7 +205,7 @@ async function doQuery() {
           key: v.id,
         }
         datas.push(obj)
-        if (obj.id == props.value) {
+        if (obj.id == props.value && !props.checkable) {
           selectedKeys.value = [obj.id]
           formData.value = obj
           setTimeout(() => {
@@ -222,6 +244,11 @@ const onSelect = (_selectedKeys: any, { node }: any) => {
     emit('update:value', formData.value.id)
     emit('select', formData.value) // 抛出事件 调用者使用
   }, 200)
+}
+
+const onCheck = (_checkedKeys: any, { node }: any) => {
+  eCheckedKeys.value = _checkedKeys
+  emit('check', node.dataRef)
 }
 
 const handleClick = () => {

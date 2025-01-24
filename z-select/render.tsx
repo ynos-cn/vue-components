@@ -22,10 +22,15 @@ const ZSelect = defineComponent({
       type: String,
       default: 'name'
     },
+    /** 搜索时的key */
+    searchKey: {
+      type: String,
+      default: undefined
+    },
     /** 需要绑定的 键  */
     bingValue: {
       type: String,
-      default: '_id'
+      default: 'id'
     },
     /** 查询大小 */
     findPageSize: {
@@ -35,7 +40,7 @@ const ZSelect = defineComponent({
     /** 数据相应的路径 */
     dataPath: {
       type: String,
-      default: 'body'
+      default: 'data'
     },
     /** 条件查询 */
     paramBodyData: {
@@ -55,6 +60,11 @@ const ZSelect = defineComponent({
     unshiftOptions: {
       type: Array as PropType<Array<DefaultOptionType>>,
       default: () => []
+    },
+    /** 小标题key */
+    subtitleKey: {
+      type: String,
+      default: undefined
     },
     /** 接口上下文 */
     apiCtx: {
@@ -115,7 +125,7 @@ const ZSelect = defineComponent({
               Object.assign(v, {
                 dataValue,
                 value: v[props.bingValue],
-                label: v[props.bingLabel],
+                label: props.subtitleKey ? `${v[props.bingLabel]}(${v[props.subtitleKey]})`: v[props.bingLabel],
                 disabled: props.disabledKeys.includes(v[props.bingValue])
               })
               // 如果存在多个标题展示属性，塞入菜单数据中
@@ -226,7 +236,7 @@ const ZSelect = defineComponent({
             Object.assign(v, {
               dataValue,
               value: v[props.bingValue],
-              label: v[props.bingLabel],
+              label: props.subtitleKey ? `${v[props.bingLabel]}(${v[props.subtitleKey]})`: v[props.bingLabel],
             })
             // 如果存在多个标题展示属性，塞入菜单数据中
             if (props.multipleLabel) {
@@ -273,7 +283,7 @@ const ZSelect = defineComponent({
           method: 'post',
           data: {
             body: {
-              [`${props.bingLabel}`]: value.trim() ?? undefined,
+              [`${props.searchKey ?? props.bingLabel}`]: value.trim() ?? undefined,
               ...props.paramBodyData
             },
             limit: props.findPageSize
@@ -299,7 +309,7 @@ const ZSelect = defineComponent({
                   Object.assign(v, {
                     dataValue,
                     value: v[props.bingValue],
-                    label: v[props.bingLabel],
+                    label: props.subtitleKey ? `${v[props.bingLabel]}(${v[props.subtitleKey]})`: v[props.bingLabel],
                   })
                   // 如果存在多个标题展示属性，塞入菜单数据中
                   if (props.multipleLabel) {
@@ -458,7 +468,7 @@ const ZSelect = defineComponent({
     return () => {
       const _props: any = {
         ...props,
-        options: !props.multipleLabel ? options.value : undefined, //如果存在多标题模式则不传递该属性即 undefined
+        options: (props.subtitleKey || !props.multipleLabel) ? options.value : undefined, //如果存在多标题模式则不传递该属性即 undefined
         filterOption: !props.showSearch,
       }
 
