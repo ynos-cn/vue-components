@@ -13,7 +13,7 @@ const BaseTable = defineComponent({
 
     return () => {
       return (
-        h('div', { class: "base-table" }, [
+        h('div', { class: "base-table table" }, [
           h(Table,
             { ...props as any, },
             { ...slots }
