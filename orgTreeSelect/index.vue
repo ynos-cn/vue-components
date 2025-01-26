@@ -41,10 +41,9 @@ import { ref, watch } from 'vue'
 import { Spin, Empty, Tree, Input, message } from 'ant-design-vue'
 import { CloseCircleOutlined } from '@ant-design/icons-vue'
 import { onClickOutside } from "@vueuse/core";
-import { BaseParams } from '@/interface/base';
-import { OrgStruct } from '@/interface/org';
 import { useAppStore } from '@/store/app'
-import { apiAllFind, apiFind, apiFindWithID } from '@/api/system/org-service'
+import { apiAllFind, apiFind, apiFindWithID } from './org-service'
+import { BaseParams, OrgStruct } from './interface'
 import { arrayToTree } from '@/utils/utils';
 
 const props = defineProps({
