@@ -24,7 +24,7 @@ const globalHeader = defineComponent({
         Modal.confirm({
           title: '确认消息',
           icon: h(ExclamationCircleOutlined),
-          content: '确定要关闭？',
+          content: '确定要退出登录？',
           okText: '确认',
           cancelText: '取消',
           onOk: () => {
